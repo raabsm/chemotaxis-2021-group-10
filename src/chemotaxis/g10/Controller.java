@@ -92,7 +92,7 @@ public class Controller extends chemotaxis.sim.Controller {
 
    private Object getCellInDirection(Object[][] grid, Point agentLocation, DirectionType directionWanted) {
       if (directionWanted == DirectionType.NORTH) {
-         if (agentLocation.x != -1) {
+         if (agentLocation.x != 1) {
             return grid[agentLocation.x - 2][agentLocation.y - 1];
          } else {
             return null;
@@ -110,7 +110,7 @@ public class Controller extends chemotaxis.sim.Controller {
             return null;
          }
       } else if (directionWanted == DirectionType.WEST) {
-         if (agentLocation.y != -1) {
+         if (agentLocation.y != 1) {
             return grid[agentLocation.x - 1][agentLocation.y - 2];
          } else {
             return null;
@@ -254,7 +254,6 @@ public class Controller extends chemotaxis.sim.Controller {
       if (chemicalsRemaining > 0) {
          for (int i = 0; i < locations.size(); i++) {
             Point agentLocation = locations.get(i);
-            TurnGridNode agentTurnGridNode = turnGrid[agentLocation.x - 1][agentLocation.y - 1];
 
             if (i == agentsLastLocation.size()) {
                agentsLastLocation.add(agentLocation);

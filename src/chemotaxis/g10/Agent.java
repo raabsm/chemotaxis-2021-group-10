@@ -240,10 +240,9 @@ public class Agent extends chemotaxis.sim.Agent {
       if (availableMoves.size() == 1){
          return new Object[] {availableMoves.get(0), chosenChemicalType};
       }
-      else if (availableMoves.size() == 2){
-         DirectionType moveToMake;
+      if (availableMoves.size() == 2){
          for (DirectionType move: availableMoves){
-            if (move != previousDirection){
+            if (move != turnBackwards(previousDirection)){
                return new Object[] {move, chosenChemicalType};
             }
          }
@@ -254,7 +253,7 @@ public class Agent extends chemotaxis.sim.Agent {
          if (!neighborMap.get(orthogonalDirection).isBlocked() && ifDirectionIsAbsoluteMax(orthogonalDirection, chosenChemicalType, neighborMap)){
 
             //see if this is a default right turn
-            if (neighborMap.get(previousDirection).isBlocked() && orthogonalDirection == turnRight(previousDirection)){
+            if (!(previousDirection == DirectionType.CURRENT) && neighborMap.get(previousDirection).isBlocked() && orthogonalDirection == turnRight(previousDirection)){
                return new Object[] {orthogonalDirection, chosenChemicalType};
             }
             else{

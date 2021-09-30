@@ -59,8 +59,7 @@ public class Agent extends chemotaxis.sim.Agent {
       /*Combine the two Bytes now using the bitwise OR operator*/
       byte intermediateByte =  (byte) (intermediateColorByte|intermediateDirectionByte);
 
-      Byte returnByte = new Byte(intermediateByte);
-      return returnByte;
+      return intermediateByte;
    }
 
    private byte color2Byte(ChemicalCell.ChemicalType currentColor){

@@ -34,6 +34,7 @@ public class Controller extends chemotaxis.sim.Controller {
       super(start, target, size, grid, simTime, budget, seed, simPrinter);
 
       computeTurnGrid(grid);
+//      printTurnGrid();
       findDesiredPath(grid, start);
       agentsLastLocation = new ArrayList<>();
       agentsLastDir = new ArrayList<>();
@@ -68,7 +69,12 @@ public class Controller extends chemotaxis.sim.Controller {
 
             while (x >= 0 && x < size && y >= 0 && y < size && grid[x][y].isOpen()) {
                if (turnGrid[x][y] == null) {
-                  TurnGridNode n = new TurnGridNode(cur.getTurns() + 1, x, y, cur.getGridPoint());
+
+                  int turns = cur.getTurns() + 1;
+                  if(numSurroundingWalls(cur.getGridPoint().x, cur.getGridPoint().y, grid) == 2)
+                     turns -= 1;
+
+                  TurnGridNode n = new TurnGridNode(turns, x, y, cur.getGridPoint());
                   turnGrid[x][y] = n;
                   frontier.add(n);
                }
@@ -89,6 +95,34 @@ public class Controller extends chemotaxis.sim.Controller {
       startNode.setTurns(startNode.getTurns() + 1);
    }
 
+   private int numSurroundingWalls(int i, int j, ChemicalCell [][] grid)
+   {
+      int deltaXY[][] = {{1, 0}, {0, -1}, {-1, 0}, {0, 1}}; // right, up, left, down
+      int x, y, nWalls = 0;
+      for(int [] dir : deltaXY)
+      {
+         x = i + dir[0];
+         y = j + dir[1];
+         if(x < 0 || x >= this.size || y < 0 || y >= this.size || grid[x][y].isBlocked())
+            nWalls++;
+      }
+      return nWalls;
+   }
+
+   private void printTurnGrid()
+   {
+      for(int i = 0;i<this.size;i++)
+      {
+         for(int j = 0;j<this.size;j++)
+         {
+            if(turnGrid[i][j] == null)
+               System.out.format(" x ");
+            else
+               System.out.format("%2d ", turnGrid[i][j].getTurns());
+         }
+         System.out.println();
+      }
+   }
 
    private Object getCellInDirection(Object[][] grid, Point agentLocation, DirectionType directionWanted) {
       if (directionWanted == DirectionType.NORTH) {

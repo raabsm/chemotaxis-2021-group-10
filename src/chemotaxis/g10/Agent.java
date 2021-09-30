@@ -213,7 +213,7 @@ public class Agent extends chemotaxis.sim.Agent {
          if (candidateCell.isBlocked()) {
             continue;
          }
-         if (candidateCell.getConcentration(chosenChemicalType) - maxConcentration > -0.001) {
+         if (candidateCell.getConcentration(chosenChemicalType) - maxConcentration > -0.0001) {
             return false;
          }
       }
@@ -240,13 +240,34 @@ public class Agent extends chemotaxis.sim.Agent {
       if (availableMoves.size() == 1){
          return new Object[] {availableMoves.get(0), chosenChemicalType};
       }
+      else if (availableMoves.size() == 2){
+         DirectionType moveToMake;
+         for (DirectionType move: availableMoves){
+            if (move != previousDirection){
+               return new Object[] {move, chosenChemicalType};
+            }
+         }
+      }
       DirectionType[] orthogonalDirections = getOrthogonalDirections(previousDirection);
 
       for (DirectionType orthogonalDirection: orthogonalDirections) {
          if (!neighborMap.get(orthogonalDirection).isBlocked() && ifDirectionIsAbsoluteMax(orthogonalDirection, chosenChemicalType, neighborMap)){
-            return new Object[] {orthogonalDirection, switchColor(chosenChemicalType)};
+
+            //see if this is a default right turn
+            if (neighborMap.get(previousDirection).isBlocked() && orthogonalDirection == turnRight(previousDirection)){
+               return new Object[] {orthogonalDirection, chosenChemicalType};
+            }
+            else{
+               return new Object[] {orthogonalDirection, switchColor(chosenChemicalType)};
+            }
          }
       }
+
+      //handle case where chemical gravitates towards a wall
+      //move away from the wall
+//      if (ifDirectionIsAbsoluteMax(DirectionType.CURRENT, chosenChemicalType, neighborMap)){
+//
+//      }
 
       // if gets to this point, resort to default functionality -- still need to implement turn-right strategy
       if (previousDirection != null && !previousDirection.equals(DirectionType.CURRENT) && neighborMap.get(previousDirection).isBlocked()) {

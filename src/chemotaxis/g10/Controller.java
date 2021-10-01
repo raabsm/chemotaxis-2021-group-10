@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.HashMap;
+import java.lang.Math;
+import java.util.Collections;
 
 import chemotaxis.sim.*;
 
@@ -34,7 +36,7 @@ public class Controller extends chemotaxis.sim.Controller {
       super(start, target, size, grid, simTime, budget, seed, simPrinter);
 
       computeTurnGrid(grid);
-//      printTurnGrid();
+      printTurnGrid();
       findDesiredPath(grid, start);
       agentsLastLocation = new ArrayList<>();
       agentsLastDir = new ArrayList<>();
@@ -50,13 +52,15 @@ public class Controller extends chemotaxis.sim.Controller {
    private void computeTurnGrid(ChemicalCell [][] grid) {
       turnGrid = new TurnGridNode[size][size];
 
-      Point target0Ind = new Point(target.x - 1, target.y - 1);
-      turnGrid[target0Ind.x][target0Ind.y] = new TurnGridNode(0, target0Ind, target0Ind);
+      Point start0Ind = new Point(start.x - 1, start.y - 1);
+      turnGrid[start0Ind.x][start0Ind.y] = new TurnGridNode(0, start0Ind, start0Ind);
 
       PriorityQueue<TurnGridNode> frontier = new PriorityQueue<TurnGridNode>(size * size);
-      frontier.add(turnGrid[target0Ind.x][target0Ind.y]);
+      frontier.add(turnGrid[start0Ind.x][start0Ind.y]);
 
       TurnGridNode cur;
+
+      int maxTurns = 0;
 
       int deltaXY[][] = {{1, 0}, {0, -1}, {-1, 0}, {0, 1}}; // right, up, left, down
 
@@ -68,22 +72,32 @@ public class Controller extends chemotaxis.sim.Controller {
             int y = cur.getGridPoint().y;
 
             while (x >= 0 && x < size && y >= 0 && y < size && grid[x][y].isOpen()) {
+
+               int turns = cur.getTurns() + 1;
+               if (numSurroundingWalls(cur.getGridPoint().x, cur.getGridPoint().y, grid) == 2)
+                  turns -= 1;
+
+               maxTurns = Math.max(maxTurns, turns);
+
                if (turnGrid[x][y] == null) {
-
-                  int turns = cur.getTurns() + 1;
-                  if(numSurroundingWalls(cur.getGridPoint().x, cur.getGridPoint().y, grid) == 2)
-                     turns -= 1;
-
                   TurnGridNode n = new TurnGridNode(turns, x, y, cur.getGridPoint());
                   turnGrid[x][y] = n;
                   frontier.add(n);
                }
-               else if(!turnGrid[x][y].getGridPoint().equals(cur.getGridPoint()) &&
-                       cur.getTurns() < turnGrid[x][y].getTurns() &&
-                       turnGrid[x][y].getGridPoint().distanceSq(cur.getGridPoint()) <
-                       turnGrid[x][y].getGridPoint().distanceSq(turnGrid[x][y].getParentPoint()))
+               else
                {
-                  turnGrid[x][y].setParentPoint(cur.getGridPoint());
+                  if (turns < turnGrid[x][y].getTurns())
+                  {
+                     turnGrid[x][y].setTurns(turns);
+                     turnGrid[x][y].setParentPoint(cur.getGridPoint());
+                     frontier.add(turnGrid[x][y]);
+                  }
+
+                  if (!turnGrid[x][y].getGridPoint().equals(cur.getGridPoint()) && cur.getTurns() < turnGrid[x][y].getTurns() &&
+                          turnGrid[x][y].getGridPoint().distanceSq(cur.getGridPoint()) < turnGrid[x][y].getGridPoint().distanceSq(turnGrid[x][y].getParentPoint()))
+                  {
+                     turnGrid[x][y].setParentPoint(cur.getGridPoint());
+                  }
                }
                x += deltaXY[dir][0];
                y += deltaXY[dir][1];
@@ -91,8 +105,38 @@ public class Controller extends chemotaxis.sim.Controller {
          }
       }
 
-      TurnGridNode startNode = turnGrid[start.x - 1][start.y - 1];
-      startNode.setTurns(startNode.getTurns() + 1);
+      for(int i = 0;i<size;i++) {
+         for (int j = 0; j < size; j++) {
+            if (turnGrid[i][j] != null) {
+               turnGrid[i][j].setTurns(-turnGrid[i][j].getTurns());
+            }
+         }
+      }
+
+      cur = turnGrid[target.x - 1][target.y-1];
+      ArrayList<Point> path = new ArrayList<>();
+      Point parent;
+      while(!cur.getGridPoint().equals(turnGrid[start0Ind.x][start0Ind.y].getGridPoint()))
+      {
+         path.add(cur.getGridPoint());
+         parent = cur.getParentPoint();
+         cur = turnGrid[parent.x][parent.y];
+      }
+      path.add(start0Ind);
+      Collections.reverse(path);
+
+      Point p;
+      for(int i = 0;i<path.size()-1;i++)
+      {
+         p = path.get(i);
+         turnGrid[p.x][p.y].setParentPoint(path.get(i+1));
+      }
+      p = path.get(path.size()-1);
+      turnGrid[p.x][p.y].setParentPoint(p);
+      System.out.println();
+
+//      TurnGridNode targetNode = turnGrid[target.x - 1][target.y - 1];
+//      targetNode.setTurns(targetNode.getTurns() + 1);
    }
 
    private int numSurroundingWalls(int i, int j, ChemicalCell [][] grid)

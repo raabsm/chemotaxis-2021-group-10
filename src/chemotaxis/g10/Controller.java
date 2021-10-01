@@ -37,7 +37,7 @@ public class Controller extends chemotaxis.sim.Controller {
 
       computeTurnGrid(grid);
       printTurnGrid();
-      findDesiredPath(grid, start);
+      findDesiredPath(grid, start, target);
       agentsLastLocation = new ArrayList<>();
       agentsLastDir = new ArrayList<>();
 //      lastChemPlaced = ChemicalCell.ChemicalType.GREEN;
@@ -292,13 +292,13 @@ public class Controller extends chemotaxis.sim.Controller {
 //   }
 
 
-   private void findDesiredPath(ChemicalCell[][] grid, Point start) {
+   private void findDesiredPath(ChemicalCell[][] grid, Point start, Point target) {
       turnsOnPath = new ArrayList<>();
       Point agentLastLocation = start;
       Point agentLocation = start;
       int numTurnsLeft = turnGrid[start.x - 1][start.y - 1].getTurns();
 
-      while (numTurnsLeft > 1) {
+      while (!isSameLocation(agentLocation, target)) {
          Point bestLocation = getNextBestLocation(agentLocation, numTurnsLeft);
          numTurnsLeft = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, DirectionType.CURRENT)).getTurns();
 

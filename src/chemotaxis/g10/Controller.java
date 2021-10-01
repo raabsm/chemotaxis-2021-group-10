@@ -1,6 +1,6 @@
 package chemotaxis.g10;
 
-import java.awt.Point;
+import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class Controller extends chemotaxis.sim.Controller {
       super(start, target, size, grid, simTime, budget, seed, simPrinter);
 
       computeTurnGrid(grid);
-//      printTurnGrid();
+      printTurnGrid();
       findDesiredPath(grid, start);
       agentsLastLocation = new ArrayList<>();
       agentsLastDir = new ArrayList<>();
@@ -222,6 +222,32 @@ public class Controller extends chemotaxis.sim.Controller {
    }
 
 
+//   private Point getNextLocationOnPath(Point agentLastLocation, Point agentLocation) {
+//      Point bestLocation = agentLocation;
+//      TurnGridNode nextCell = (TurnGridNode) getCellInDirection(turnGrid, agentLocation, getAgentDirection(agentLastLocation, agentLocation));
+//      if (nextCell == null) {
+//         DirectionType lastDirection = getAgentDirection(agentLastLocation, agentLocation);
+//         if (lastDirection == DirectionType.NORTH) {
+//            Point nextCellPoint = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, DirectionType.EAST)).getGridPoint();
+//            bestLocation = new Point(nextCellPoint.x + 1, nextCellPoint.y + 1);
+//         } else if (lastDirection == DirectionType.EAST) {
+//            Point nextCellPoint = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, DirectionType.SOUTH)).getGridPoint();
+//            bestLocation = new Point(nextCellPoint.x + 1, nextCellPoint.y + 1);
+//         } else if (lastDirection == DirectionType.SOUTH) {
+//            Point nextCellPoint = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, DirectionType.WEST)).getGridPoint();
+//            bestLocation = new Point(nextCellPoint.x + 1, nextCellPoint.y + 1);
+//         } else if (lastDirection == DirectionType.WEST) {
+//            Point nextCellPoint = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, DirectionType.NORTH)).getGridPoint();
+//            bestLocation = new Point(nextCellPoint.x + 1, nextCellPoint.y + 1);
+//         }
+//      } else {
+//         bestLocation = nextCell.getGridPoint();
+//         bestLocation = new Point(bestLocation.x + 1, bestLocation.y + 1);
+//      }
+//      return bestLocation;
+//   }
+
+
    private void findDesiredPath(ChemicalCell[][] grid, Point start) {
       turnsOnPath = new ArrayList<>();
       Point agentLastLocation = start;
@@ -238,6 +264,9 @@ public class Controller extends chemotaxis.sim.Controller {
                Point nextCellPoint = ((TurnGridNode) getCellInDirection(turnGrid, agentLocation, currDirection)).getGridPoint();
                turnsOnPath.add(new Point[] {agentLocation, new Point(nextCellPoint.x + 1, nextCellPoint.y + 1)});
             }
+         } else {
+            bestLocation = turnGrid[bestLocation.x - 1][bestLocation.y - 1].getParentPoint();
+            bestLocation = new Point(bestLocation.x + 1, bestLocation.y + 1);
          }
 
          agentLastLocation = agentLocation;

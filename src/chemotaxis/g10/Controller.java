@@ -32,10 +32,10 @@ public class Controller extends chemotaxis.sim.Controller {
     * @param simPrinter  simulation printer
     *
     */
-   public Controller(Point start, Point target, Integer size, ChemicalCell[][] grid, Integer simTime, Integer budget, Integer seed, SimPrinter simPrinter) {
-      super(start, target, size, grid, simTime, budget, seed, simPrinter);
+   public Controller(Point start, Point target, Integer size, ChemicalCell[][] grid, Integer simTime, Integer budget, Integer seed, SimPrinter simPrinter, Integer agentGoal, Integer spawnFreq) {
+      super(start, target, size, grid, simTime, budget, seed, simPrinter, agentGoal, spawnFreq);
 
-      computeTurnGrid(grid);
+      this.turnGrid = computeTurnGrid(grid, start);
       printTurnGrid();
       findDesiredPath(grid, start, target);
       agentsLastLocation = new ArrayList<>();
@@ -44,24 +44,26 @@ public class Controller extends chemotaxis.sim.Controller {
    }
 
    /**
-    * Computes shortest turn paths from all unblocked cells in the grid.
+    * Computes the shortest turn paths from all unblocked cells in the grid
+    * and required number of explicit turns from each cell to the target.
     *
     * @param grid        game grid/map
+    * @param startCell   Cell to start computation
     *
     */
-   private void computeTurnGrid(ChemicalCell [][] grid) {
-      turnGrid = new TurnGridNode[size][size];
+   private TurnGridNode[][] computeTurnGrid(ChemicalCell [][] grid, Point startCell) {
+      turnGrid = new TurnGridNode[this.size][this.size];
 
-      Point start0Ind = new Point(start.x - 1, start.y - 1);
+      // Start calculating from start node
+      Point start0Ind = new Point(startCell.x - 1, startCell.y - 1);
       turnGrid[start0Ind.x][start0Ind.y] = new TurnGridNode(0, start0Ind, start0Ind);
 
-      PriorityQueue<TurnGridNode> frontier = new PriorityQueue<TurnGridNode>(size * size);
+      // Low turn cells have priority
+      PriorityQueue<TurnGridNode> frontier = new PriorityQueue<TurnGridNode>(this.size * this.size);
       frontier.add(turnGrid[start0Ind.x][start0Ind.y]);
 
       TurnGridNode cur;
-
       int maxTurns = 0;
-
       int deltaXY[][] = {{1, 0}, {0, -1}, {-1, 0}, {0, 1}}; // right, up, left, down
 
       while (!frontier.isEmpty()) {
@@ -71,9 +73,11 @@ public class Controller extends chemotaxis.sim.Controller {
             int x = cur.getGridPoint().x;
             int y = cur.getGridPoint().y;
 
-            while (x >= 0 && x < size && y >= 0 && y < size && grid[x][y].isOpen()) {
+            while (x >= 0 && x < this.size && y >= 0 && y < this.size && grid[x][y].isOpen()) {
 
                int turns = cur.getTurns() + 1;
+
+               // If there's 2 surrounding walls, this is a forced movement (no chem req)
                if (numSurroundingWalls(cur.getGridPoint().x, cur.getGridPoint().y, grid) == 2)
                   turns -= 1;
 
@@ -93,6 +97,8 @@ public class Controller extends chemotaxis.sim.Controller {
                      frontier.add(turnGrid[x][y]);
                   }
 
+                  // Update parent point if there's a closer cell with same number of turns.
+                  // Number of turns doesn't change, but manhattan distance is minimized
                   if (!turnGrid[x][y].getGridPoint().equals(cur.getGridPoint()) && cur.getTurns() < turnGrid[x][y].getTurns() &&
                           turnGrid[x][y].getGridPoint().distanceSq(cur.getGridPoint()) < turnGrid[x][y].getGridPoint().distanceSq(turnGrid[x][y].getParentPoint()))
                   {
@@ -105,14 +111,16 @@ public class Controller extends chemotaxis.sim.Controller {
          }
       }
 
-      for(int i = 0;i<size;i++) {
-         for (int j = 0; j < size; j++) {
+      // start cell is 0, and decreases to target cell
+      for(int i = 0;i < this.size;i++) {
+         for (int j = 0; j < this.size; j++) {
             if (turnGrid[i][j] != null) {
                turnGrid[i][j].setTurns(-turnGrid[i][j].getTurns());
             }
          }
       }
 
+      // Alg computes path from target to start, we need start to target, so reverse this.
       cur = turnGrid[target.x - 1][target.y-1];
       ArrayList<Point> path = new ArrayList<>();
       Point parent;
@@ -133,10 +141,8 @@ public class Controller extends chemotaxis.sim.Controller {
       }
       p = path.get(path.size()-1);
       turnGrid[p.x][p.y].setParentPoint(p);
-      System.out.println();
 
-//      TurnGridNode targetNode = turnGrid[target.x - 1][target.y - 1];
-//      targetNode.setTurns(targetNode.getTurns() + 1);
+      return turnGrid;
    }
 
    private int numSurroundingWalls(int i, int j, ChemicalCell [][] grid)

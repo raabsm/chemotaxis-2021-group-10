@@ -249,17 +249,21 @@ public class Agent extends chemotaxis.sim.Agent {
       }
 
       for (DirectionType move: availableMoves){
-         ChemicalCell.ChemicalType[] colors = {ChemicalCell.ChemicalType.GREEN, ChemicalCell.ChemicalType.RED, ChemicalCell.ChemicalType.BLUE};
-         for (ChemicalCell.ChemicalType color: colors){
-            if (neighborMap.get(move).getConcentration(color) == 1.0){
-               if (color == chosenChemicalType){
-                  return new Object[] {move, switchColor(chosenChemicalType)};
-               }
-               else{
-                  return new Object[] {move, chosenChemicalType};
-               }
+//         ChemicalCell.ChemicalType[] colors = {ChemicalCell.ChemicalType.GREEN, ChemicalCell.ChemicalType.RED, ChemicalCell.ChemicalType.BLUE};
+//         for (ChemicalCell.ChemicalType color: colors){
+//            if (neighborMap.get(move).getConcentration(color) == 1.0){
+//               if (color == chosenChemicalType){
+//                  return new Object[] {move, switchColor(chosenChemicalType)};
+//               }
+//               else{
+//                  return new Object[] {move, chosenChemicalType};
+//               }
+//            }
+//         }
+            if (neighborMap.get(move).getConcentration(chosenChemicalType) == 1.0) {
+               return new Object[]{move, switchColor(chosenChemicalType)};
             }
-         }
+
       }
 
       DirectionType[] orthogonalDirections = getOrthogonalDirections(previousDirection);
